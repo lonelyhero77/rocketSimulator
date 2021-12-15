@@ -19,27 +19,35 @@ Mm = 7.35e22
 Rr = Rm*5
 
 """
+Variables
+"""
+orbitDrawing = True
+# Time Settings
+dt = 1000 # [sec]
+freq = 5000 # [Hz]
+
+"""
 Planetary and Rocket Configuration
 """
-earth = sphere(radius = Re*10, color = color.white, make_trail=True, texture=textures.earth)
+earth = sphere(radius = Re*10, color = color.white, make_trail=orbitDrawing, trail_color=color.blue, texture=textures.earth)
 earth.mass = Me
 earth.pos = vec(0, 0, 0)
 earth.vel = vec(0, 0, 0)
 
-moon = sphere(radius = Rm*10, color = color.white, make_trail=True, texture=textures.rough)
+moon = sphere(radius = Rm*10, color = color.white, make_trail=orbitDrawing, texture=textures.rough)
 moon.mass =Mm
 moon.pos = vec(Rem, 0, 0)
 moon.vel = vec(0, 0, -1022)
 
-handle = cylinder( size=vector(1e8,.2e8,.2e8), color=vector(0.72,0.42,0) )
+handle = cylinder( size=vector(1e8,.2e8,.2e8), color=vector(0.72,0.42,0))
 head = box( size=vector(.2e8,.6e8,.2e8), pos=vector(1.1,0,0), color=color.gray(.6))
-hammer = compound([handle, head], make_trail=True, color= color.white, trail_color = color.green)
+hammer = compound([handle, head], make_trail=orbitDrawing, color= color.white, trail_color = color.green)
 
 rocket = hammer
 # rocket = sphere(radius = Rr, color = color.red, make_trail=True)
 rocket.mass = 4500
-rocket.pos = vec(Rem/1.2, 0, 0)
-rocket.vel = vec(0, 0, -1000)
+rocket.pos = vec(Rem/1.1, 0, 0)
+rocket.vel = vec(0, 0, -1328)
 
 """
 System Force Calculation and Application
@@ -53,7 +61,7 @@ planets = (earth, moon, rocket)
 
 def calculateVelocity(obj1, obj2):
     R = obj1.pos - obj2.pos
-    F = G * obj1.mass * obj2.mass * R.norm() / R.mag2 #norm = u / |u
+    F = G * obj1.mass * obj2.mass * R.norm() / R.mag2 # norm = u /|u|
     obj1.vel = obj1.vel - (F / obj1.mass) * dt
     obj2.vel = obj2.vel + (F / obj2.mass) * dt
     
@@ -63,15 +71,20 @@ def calculatePosition(obj):
 """
 Simulation Environment and Loop Configuration
 """
-# Time Settings
-dt = 100
-freq = 2000
+#Record Settings
 mt = 0
+maxSpeed = 0
 
 # Scene Settings
-scene.title = "<b>System Simulation @ dt[sec]={}, Frequency[Hz]={}</b>".format(dt, freq)
+def setspeed(s):
+    pass
 
+def setfreq(s):
+    pass
 
+scene.title = "<b>System Simulation @ dt[sec]={}, Frequency[Hz]={}, Initial Rocket Velocity={}</b>".format(dt, freq, rocket.vel)
+
+# Loop
 while True:
     rate(freq) # rate(frequency), halts computations until 1.0/freq seconds after the previous call to rate()
     
@@ -85,15 +98,17 @@ while True:
 
     mt += dt
     d = ((mt / 60) / 60 ) // 24
+    curSpeed = round(rocket.vel.mag)
+    if maxSpeed < curSpeed:
+        maxSpeed = curSpeed
 
-    msg = ("Mission Time    {}s / {}m / {}d".format(mt, mt//60, d))
+    msg = ("Mission Time    {}s / {}m / {}d \n Current Rocket Velocity v={}, Current Rocket Speed |v|={}, Maximum Rocket Speed |v_max|={}"\
+        .format(mt, mt//60, d, rocket.vel, curSpeed, maxSpeed))
     print(msg)
     scene.caption = msg
-    # print(rocket.pos)
-    # print(rocket.vel)
 
-    #Stop when collision between rocket and earth or rocket and moon has occurred
+    # Stop when collision between rocket and earth or rocket and moon has occurred
     if mag2(rocket.pos-earth.pos) <= (Re+Rr)**2 or mag2(rocket.pos-moon.pos) <= (Rm+Rr)**2:
         msg = ("Collision occured at Mission Time[day]: {}".format(d))
-        scene.caption = msg
+        scene.append_to_caption(msg)
         scene.pause()
