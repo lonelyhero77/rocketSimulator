@@ -22,6 +22,7 @@ Rr = Rm*5
 """
 General Variables
 """
+debug = False
 orbitDrawing = False
 # Time Settings
 dt = 10 # [sec]
@@ -33,7 +34,7 @@ warp = False
 Rocket Variables
 """
 engine = False # Rocket Engine Logic Trigger
-propulsion = True # True: Forward, False: Reverse
+propulsion = False # True: Reverse, False: Forward
 initialRocketVelocity = vec(0, 0, -1395)
 
 
@@ -86,19 +87,14 @@ Rocket Sequence Configuration
 def switchEngine(b):
     global engine
     engine = not engine
-    if engine:
-        b.text = "Engine OFF"
-    else:
-        b.text = "Engine ON"
+    if engine: b.text = "Engine OFF"
+    else: b.text = "Engine ON"
 
 def switchPropulsion(p):
     global propulsion
     propulsion = not propulsion
-    
-    if propulsion:
-        p.text = "REVERSE"
-    else:
-        p.text = "FORWARD"
+    if not propulsion: p.text = "MODE: FORWARD"
+    else: p.text = "MODE: REVERSE"
 
 """
 Simulation Environment and Loop Configuration
@@ -111,14 +107,17 @@ maxSpeed = 0
 def setspeed(s):
     global dt, warp
     warp = not warp
-    if warp:dt = 1000
-    else: dt= 10
-    # scene.title = "<b>System Simulation @ dt[sec]={}, Frequency[Hz]={}, Initial Rocket Velocity={}</b>".format(dt, freq, rocket.vel)
-
+    if warp:
+        s.text = "STOP WARPING"
+        dt = 1000
+    else:
+        s.text = "WARP" 
+        dt= 10
+        
 scene.camera.follow(rocket)
-scene.title = "<b>System Simulation @ dt[sec]={}, Frequency[Hz]={}, Initial Rocket Velocity={}</b>".format(dt, freq, rocket.vel)
+scene.title = "<b>System Simulation @ Initial dt[sec]={}, Frequency[Hz]={}, Initial Rocket Velocity={}</b>\n".format(dt, freq, rocket.vel)
 button(text="Turn Engine On", pos=scene.title_anchor, bind=switchEngine)
-button(text="FORWARD", pos=scene.title_anchor, bind=switchPropulsion)
+button(text="MODE: FORWARD", pos=scene.title_anchor, bind=switchPropulsion)
 button(text="WARP", pos=scene.title_anchor, bind=setspeed)
 
 # Loop
@@ -142,12 +141,14 @@ while True:
 
     mt += dt
     d = ((mt / 60) / 60 ) // 24
+
     curSpeed = round(rocket.vel.mag)
     if maxSpeed < curSpeed:
         maxSpeed = curSpeed  
-    msg = ("Mission Time    {}s / {}m / {}d \n Current Rocket Speed |v|={spd}, Maximum Rocket Speed |v_max|={maxspd}"\
+
+    msg = ("<h3>Mission Time    {}s / {}m / {}d \n |v|={spd}, |v_max|={maxspd}</h3>"\
         .format(mt, mt//60, d, vel=rocket.vel, spd=curSpeed, maxspd=maxSpeed))
-    # print(msg)
+    if debug: print(msg)
     scene.caption = msg
    
     # Stop when collision between rocket and earth or rocket and moon has occurred
