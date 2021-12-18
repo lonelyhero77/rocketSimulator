@@ -23,9 +23,11 @@ Rr = Rm*5
 General Variables
 """
 debug = False
+screenOptimization = True # If this is True, the simulator gives a great view for 4:3 screen.
 orbitDrawing = False
 # Time Settings
-dt = 10 # [sec]
+dt = 50 # [sec]
+dtbase = dt
 freq = 1000 # [Hz]
 warp = False
 
@@ -44,7 +46,7 @@ Planetary Variables
 initialEarthPos = vector(0, 0, 0) # or vec(0, 0, 0)
 initialEarthVel = vector(0, 0, 0)
 initialMoonPos = vector(Rem, 0, 0)
-initialMoonVel = vec(0, 0, -1022)
+initialMoonVel = vector(0, 0, -1022)
 
 """
 Planetary and Rocket Configuration
@@ -123,6 +125,7 @@ def init():
     moon.vel = initialMoonVel
     mt = 0
     maxSpeed = 0
+    scene.caption = ""
 
 #Record Settings
 mt = 0
@@ -130,33 +133,41 @@ maxSpeed = 0
 
 # Scene Settings
 def setspeed(s):
-    global dt, warp
+    global dt, warp, dtbase
     warp = not warp
     if warp:
         s.text = "STOP WARPING"
         dt = 1000
     else:
         s.text = "WARP" 
-        dt= 10
+        dt= dtbase
         
 scene.camera.follow(rocket)
-scene.title = "<b>System Simulation @ Initial dt[sec]={}, Frequency[Hz]={}, Initial Rocket Velocity={}</b>\n\
-    ENGINE MODE | PROPULSION MODE | TIME WARP\n\
-    "\
-    .format(dt, freq, rocket.vel)
+
+if screenOptimization:
+    scene.title = "<b>System Simulation \n@ Initial dt[sec]={}, Frequency[Hz]={}, Initial Rocket Velocity={}</b>\n\
+        ENGINE MODE | PROPULSION MODE | TIME WARP\n\
+        "\
+        .format(dt, freq, rocket.vel)
+else:
+    scene.title = "<b>System Simulation @ Initial dt[sec]={}, Frequency[Hz]={}, Initial Rocket Velocity={}</b>\n\
+        ENGINE MODE | PROPULSION MODE | TIME WARP\n\
+        "\
+        .format(dt, freq, rocket.vel)
+
 button(text="Turn Engine On", pos=scene.title_anchor, bind=switchEngine)
 button(text="MODE: FORWARD", pos=scene.title_anchor, bind=switchPropulsion)
 button(text="WARP", pos=scene.title_anchor, bind=setspeed)
 button(text="RESET", pos=scene.title_anchor, bind=init)
 
 # Loop
+scene.pause()
 while True:
-    rate(freq) # rate(frequency), halts computations until 1.0/freq seconds after the previous call to rate()
+    rate(freq)
     
     for planet1, planet2 in system:
         calculateVelocity(planet1, planet2)
 
-    # Engine Propulsion System
     if engine:
         if propulsion: rocket.vel = rocket.vel + 0.4 * -rocket.vel.norm()
         else: rocket.vel = rocket.vel + 0.4 * +rocket.vel.norm()
@@ -167,7 +178,7 @@ while True:
     rocket.axis = rocket.vel.norm()
 
     mt += dt
-    d = ((mt / 60) / 60 ) // 24
+    d = (mt / 3600 ) // 24
 
     curSpeed = round(rocket.vel.mag)
     if maxSpeed < curSpeed:
