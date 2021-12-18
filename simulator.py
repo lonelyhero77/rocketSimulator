@@ -79,14 +79,14 @@ system = [
     ]    
 planets = (earth, moon, rocket)
 
-def calculateVelocity(obj1, obj2):
-    R = obj1.pos - obj2.pos
-    F = G * obj1.mass * obj2.mass * R.norm() / R.mag2 # norm = u /|u|
-    obj1.vel = obj1.vel - (F / obj1.mass) * dt
-    obj2.vel = obj2.vel + (F / obj2.mass) * dt
+def calculateVelocity(planet1, planet2):
+    R = planet1.pos - planet2.pos
+    F = G * planet1.mass * planet2.mass * R.norm() / R.mag2 # norm = u /|u|
+    planet1.vel = planet1.vel - (F / planet1.mass) * dt
+    planet2.vel = planet2.vel + (F / planet2.mass) * dt
     
-def calculatePosition(obj):
-    obj.pos = obj.pos + obj.vel * dt
+def calculatePosition(planet):
+    planet.pos = planet.pos + planet.vel * dt
 
 """
 Rocket Sequence Configuration
@@ -94,8 +94,12 @@ Rocket Sequence Configuration
 def switchEngine(b):
     global engine
     engine = not engine
-    if engine: b.text = "Engine OFF"
-    else: b.text = "Engine ON"
+    if engine:
+        b.text = "Engine OFF"
+        rocket.trail_color = color.orange
+    else:
+        b.text = "Engine ON"
+        rocket.trail_color = color.yellow
 
 def switchPropulsion(p):
     global propulsion
@@ -154,10 +158,8 @@ while True:
 
     # Engine Propulsion System
     if engine:
-        if propulsion:
-            rocket.vel = rocket.vel + 0.4 * -rocket.vel.norm()
-        else:
-            rocket.vel = rocket.vel + 0.4 * +rocket.vel.norm()
+        if propulsion: rocket.vel = rocket.vel + 0.4 * -rocket.vel.norm()
+        else: rocket.vel = rocket.vel + 0.4 * +rocket.vel.norm()
     
     for planet in planets:
         calculatePosition(planet)
@@ -171,7 +173,7 @@ while True:
     if maxSpeed < curSpeed:
         maxSpeed = curSpeed  
 
-    msg = ("<h3>Mission Time    {}s / {}m / {}d \n |v|[m/s]={spd}, |v_max|={maxspd}</h3>"\
+    msg = ("<h3>Mission Time    {}s / {}m / {}d \n |v|= {spd} m/s, |v_max|= {maxspd} m/s</h3>"\
         .format(mt, mt//60, d, vel=rocket.vel, spd=curSpeed, maxspd=maxSpeed))
     if debug: print(msg)
     scene.caption = msg
